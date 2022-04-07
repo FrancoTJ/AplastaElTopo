@@ -17,6 +17,7 @@ function menu() {
   if (!isNaN(opcionSeleccionada)) {
     switch (opcionSeleccionada) {
       case 1:
+        console.log("abc");
         mostrarRanking();
         break;
       case 2:
@@ -55,11 +56,22 @@ function solicitarNumero(textoSolicitud) {
 }
 
 function mostrarRanking() {
-  ranking.jugadores.forEach((jugador) =>
-    console.log(
-      jugador.posicion + "-" + jugador.nombre + "-" + jugador.puntaje + "pts."
-    )
-  );
+
+  let ULJugadores = document.getElementById("listPlayers");
+  ULJugadores.innerHTML = 'Hola JS';
+  console.log(ULJugadores);
+  // if(ranking.jugadores.length == 0){
+  //   ULJugadores.innerHTML = "<span>No olvides ingresar tu jugador antes de comenzar.</span>"
+  // } else{
+  //   ranking.jugadores.forEach((jugador)=>ULJugadores.innerHTML+=`${jugador.posicion}-${jugador.nombre} - ${jugador.puntaje}pts.`)
+  // }
+
+
+  // ranking.jugadores.forEach((jugador) =>
+  //   console.log(
+  //     jugador.posicion + "-" + jugador.nombre + "-" + jugador.puntaje + "pts."
+  //   )
+  // );
 }
 
 function crearJugador() {

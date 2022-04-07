@@ -11,10 +11,11 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
+    <script defer src="js/funcionesSinImplementar.js"></script>
+    <script defer src="js/objects.js"></script>
+    <script defer src="js/script.js"></script>
+
     <link href="css/style.css" rel="stylesheet" />
-    <script desert src="js/funcionesSinImplementar.js"></script>
-    <script desert src="js/objects.js"></script>
-    <script desert src="js/script.js"></script>
   </head>
   <body>
     <header>
@@ -43,14 +44,11 @@
         </div>
       </article>
       <article class="jugadores">
-        <button class="agregarJugador">
-          <span class="buttonIcon"></span>
-          <span class="buttonText">Agregar Jugador</span>
+        <button id="addPlayer" class="agregarJugador">
+          <span class="agregarJugador-buttonIcon"></span>
+          <span class="agregarJugador-buttonText">Agregar Jugador</span>
         </button>
-        <ul>
-          <li>Jugador1</li>
-          <li>Jugador2</li>
-          <li>Jugador3</li>
+        <ul id="listPlayers">
         </ul>
       </article>
     </main>
