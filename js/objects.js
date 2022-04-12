@@ -9,7 +9,7 @@ class Ranking {
     this.jugadores.push(jugador);
   }
 }
-let ranking = new Ranking();
+const ranking = new Ranking();
 
 class Jugador {
   constructor(nombre) {
