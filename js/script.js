@@ -1,11 +1,48 @@
 //let opcionSeleccionada;
 //let jugadorActual;
+let stage = new Stage(0, "");
 
 init();
 
-function init() { //Carga datos y funcionalidad de APP
+function startStage(namePlayer) {
+  //Inicia Partida de un jugador
+  let player = ranking.players.find((player) => player.name === namePlayer);
+  stage.attempts = 10;
+  stage.playerName = player.name;
+  initBoard();
+}
+
+function initBoard() {
+  showPlayStopBtns();
+}
+
+function showPlayStopBtns(){
+  const playBtns = document.getElementsByClassName("play");
+  console.log(playBtns.length);
+  for (let btn of playBtns) {
+    console.log(btn.classList.contains("player"+stage.playerName));
+    if (!btn.classList.contains("player"+stage.playerName)) {
+      btn.classList.add("d-none");
+      console.log(btn);
+    } else {
+      btn.classList.remove("d-none");
+      btn.value = "Detener";
+      btn.addEventListener("click", stopStage());
+      }
+  }
+}
+
+function stopStage(){
+  stage.attempts = 0;
+  stage.playerName = "";
+  saveRanking();
+  showRankingDOM();
+}
+
+function init() {
+  //Carga datos y funcionalidad de APP
   loadSave();
-  agregarEventos();
+  addEvent();
 
   // TEST
   // let p1 = new Jugador("JuanP1");
@@ -14,32 +51,30 @@ function init() { //Carga datos y funcionalidad de APP
   // ranking.agregarJugador(p2);
   // let p3 = new Jugador("LuigiP3");
   // ranking.agregarJugador(p3);
-  mostrarRankingEnDOM();
+  showRankingDOM();
 }
 //----------AGREGAR EVENTOS----------
 
-function agregarEventos() { //Agrega eventos a los elementos que lo requieran
+function addEvent() {
+  //Agrega eventos a los elementos que lo requieran
   //Evento agregar jugador
   const addPlayerBtn = document.getElementById("addPlayerBtn");
-  addPlayerBtn.addEventListener("click", agregarJugador);
+  addPlayerBtn.addEventListener("click", addPlayer);
 }
 
 //----------FIN AGREGAR EVENTOS----------
 
-function loadSave() { //Carga de LocalStorage si ya existen datos previos
-  console.log(ranking.jugadores);
+function loadSave() {
+  //Carga de LocalStorage si ya existen datos previos
   if (localStorage.getItem("ranking")) {
-    console.log("Carga JSON existente");
-    ranking.jugadores = JSON.parse(localStorage.getItem("ranking"));
-  } else {
-    console.log("NO hay datos almacenados previamente.");
+    ranking.players = JSON.parse(localStorage.getItem("ranking"));
   }
 }
 
-function mostrarRankingEnDOM() { //Muestra en pantalla listado de jugadores
+function showRankingDOM() {
+  //Muestra en pantalla listado de jugadores
   const ULPlayers = document.getElementById("ULPlayers");
-  if (ranking.jugadores.length === 0) {
-    console.log("Sin datos a cargar");
+  if (ranking.players.length === 0) {
     ULPlayers.innerHTML = "";
     const liVacia = document.createElement("li");
     liVacia.className = "LIVacia";
@@ -47,47 +82,66 @@ function mostrarRankingEnDOM() { //Muestra en pantalla listado de jugadores
       "No hay Jugadores creados, favor crear uno para comenzar.";
     ULPlayers.appendChild(liVacia);
   } else {
-    console.log("Se cargan los datos a cargar");
     ULPlayers.innerHTML = "";
-    ranking.jugadores.forEach((jugador) => {
+    ranking.players.forEach((player) => {
       const liJugador = document.createElement("li");
-      liJugador.className = "LIPlayer " + "LIPlayer" + jugador.posicion;
+      liJugador.className = "LIPlayer " + "LIPlayer" + player.ranking;
       liJugador.innerHTML =
-        jugador.posicion +
+        player.ranking +
         ") " +
-        jugador.nombre +
+        player.name +
         " - " +
-        jugador.puntaje +
-        "pts.";
+        player.points +
+        "pts. " +
+        "<input type='button' value='Jugar' class='play player" +
+        player.name +
+        "' onclick='startStage(`" +
+        player.name +
+        "`)'>";
       ULPlayers.appendChild(liJugador);
     });
+    //showPlayStopBtns();
   }
 }
 
-function agregarJugador() { //Agrega un Jugador en sistema y muestra en pantalla pantalla
-  insertPlayer();
-  grabarRanking();
-  mostrarRankingEnDOM();
+function addPlayer() {
+  //Ingresa en sistema jugador a listado
+  const inputPlayerName = document.getElementById("namePlayerText");
+  console.log(inputPlayerName.value);
+//  console.log(ranking.players.some(player => player.name === namePlayerText));
+  if (inputPlayerName.value.length === 0) {
+    showMsg("Favor ingrese un nombre.");
+  //} else if(ranking.players.some((player) => player.namePlayer === namePlayerText)) {
+  } else if(ranking.players.some(player => player.name === inputPlayerName)) {
+    showMsg("Nombre ya ingresado.");
+  } else {
+    const jugador = new Player(inputPlayerName.value);
+    inputPlayerName.value = "";
+    ranking.agregarJugador(jugador);
+    saveRanking();
+    showRankingDOM();
+    showMsg("Usuario ingresado.");
+  }
 }
 
-function insertPlayer() { //Ingresa en sistema jugador a listado
-  const namePlayerText = document.getElementById("namePlayerText");
-  const jugador = new Jugador(namePlayerText.value);
-  namePlayerText.value = "";
-  ranking.agregarJugador(jugador);
+function showMsg(textToShow){ //Muestra resultado en pantalla pantalla
+  console.log(textToShow);
+  const responseLbl = document.getElementById("responseAddPlayerBtn");
+  responseLbl.innerText = textToShow;
 }
 
-function grabarRanking() { //Graba Ranking de jugadores en LocalStorage
+function saveRanking() {
+  //Graba Ranking de jugadores en LocalStorage
   localStorage.removeItem("ranking");
-  localStorage.setItem("ranking", JSON.stringify(ranking.jugadores));
+  localStorage.setItem("ranking", JSON.stringify(ranking.players));
 }
 /*
 function iniciarPartida() {
   let nroJugadorBuscado = parseInt(prompt("Ingrese número de jugador"));
   if (
-    ranking.jugadores.some((jugador) => jugador.posicion === nroJugadorBuscado)
+    ranking.players.some((jugador) => jugador.posicion === nroJugadorBuscado)
   ) {
-    jugadorActual = ranking.jugadores[nroJugadorBuscado - 1];
+    jugadorActual = ranking.players[nroJugadorBuscado - 1];
     console.log("Jugador encontrado");
   } else {
     console.log("Jugador no encontrado");
@@ -96,18 +150,23 @@ function iniciarPartida() {
 }
 
 function sumarMarcador(jugador) {
-  ranking.jugadores[jugador.posicion - 1].puntaje += 1;
+  ranking.players[jugador.posicion - 1].puntaje += 1;
   console.log(
     `Jugador ${jugador.posicion}-${jugador.nombre} se le agrega un punto.`
   );
 }
 
 function restarMarcador(jugador) {
-  if (ranking.jugadores[jugador.posicion - 1].puntaje > 0) {
-    ranking.jugadores[jugador.posicion - 1].puntaje -= 1;
+  if (ranking.players[jugador.posicion - 1].puntaje > 0) {
+    ranking.players[jugador.posicion - 1].puntaje -= 1;
   }
   console.log(
     `Jugador ${jugador.posicion}-${jugador.nombre} se le resta un punto.`
   );
 }
 */
+function test(text) {
+  console.log(text);
+//console.log(ranking.players.some(player => player.namePlayer === text));
+  console.log(ranking.players.some(player => player.name === text));
+}

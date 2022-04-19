@@ -1,20 +1,28 @@
 class Ranking {
   constructor() {
-    this.jugadores = [];
+    this.players = [];
   }
   ordenarJugadores() {
     console.log("Pendiente ordenamiento");
   }
   agregarJugador(jugador) {
-    this.jugadores.push(jugador);
+    this.players.push(jugador);
   }
 }
 const ranking = new Ranking();
 
-class Jugador {
-  constructor(nombre) {
-    this.posicion = ranking.jugadores.length + 1;
-    this.nombre = nombre;
-    this.puntaje = 0;
+class Player {
+  constructor(name) {
+    this.ranking = ranking.players.length + 1;
+    this.name = name;
+    this.points = 0;
   }
 }
+
+class Stage {
+  constructor(attempts, playerName) {
+    this.attempts = attempts;
+    this.playerName = playerName;
+  }
+}
+
