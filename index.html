@@ -11,6 +11,9 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+    <script defer type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script defer src="js/funcionesSinImplementar.js"></script>
     <script defer src="js/objects.js"></script>
     <script defer src="js/script.js"></script>
@@ -41,13 +44,13 @@
         <span>Nombre jugador:</span
         ><input type="text" name="namePlayer" id="namePlayerText" />
         <form id="playersForm">
-          <button id="addPlayerBtn" class="agregarJugador">
+          <button id="addPlayerBtn" class="agregarJugador" type="button">
             <span class="agregarJugador-buttonIcon"></span>
             <span class="agregarJugador-buttonText">Agregar Jugador</span>
           </button>
           <span id="responseAddPlayerBtn"></span>
           <ul id="ULPlayers">
-            <li>Cargando jugadores...</li>
+            <div>Cargando jugadores...</div>
           </ul>
         </form>
       </article>
