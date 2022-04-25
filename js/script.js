@@ -12,7 +12,9 @@ function init() {
 
 function loadSave() {
   //Carga de LocalStorage si ya existen datos previos
-  let list = localStorage.getItem("ranking") ? JSON.parse(localStorage.getItem("ranking")) : [];
+  let list = localStorage.getItem("ranking")
+    ? JSON.parse(localStorage.getItem("ranking"))
+    : [];
   ranking.players = list;
 }
 
@@ -28,39 +30,38 @@ function addPlayer() {
   const inputPlayerName = document.getElementById("namePlayerText");
   inputPlayerName.value = inputPlayerName.value.trim();
   if (inputPlayerName.value.length === 0) {
-    showMsj("Favor ingrese un nombre.");
+    showMsj("Favor ingrese un nombre.", 2000);
     //} else if(ranking.players.some((player) => player.namePlayer === namePlayerText)) {
   } else if (
     ranking.players.some((player) => player.name === inputPlayerName.value)
   ) {
-    showMsj("Nombre ya ingresado.");
+    showMsj("Nombre ya ingresado.", 2000);
   } else {
     const jugador = new Player(inputPlayerName.value);
     inputPlayerName.value = "";
     ranking.agregarJugador(jugador);
     saveRanking();
     showRankingDOM();
-    showMsj("Usuario ingresado.");
+    showMsj("Usuario ingresado.", 3000);
   }
 }
 
-function showMsj(msj){
+function showMsj(msj, timeMilliseconds) {
   Toastify({
     text: msj,
-    duration: 2000,
+    duration: timeMilliseconds,
     gravity: "bottom", // `top` or `bottom`
     position: "right", // `left`, `center` or `right`
     stopOnFocus: true, // Prevents dismissing of toast on hover
     style: {
       background: "linear-gradient(to right, #00b09b, #96c93d)",
     },
-    onClick: function(){} // Callback after click
+    onClick: function () {}, // Callback after click
   }).showToast();
 }
 
 function saveRanking() {
   //Graba Ranking de jugadores en LocalStorage
-  localStorage.removeItem("ranking");
   localStorage.setItem("ranking", JSON.stringify(ranking.players));
 }
 
@@ -84,20 +85,9 @@ function showRankingDOM() {
         `<input id='player${player.name}' type='button' value='Jugar' class='play player${player.name}'>`;
       ULPlayers.appendChild(liJugador);
     });
-    //showHidePlayStopBtns();
+    showHidePlayStopBtns();
   }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 function showHidePlayStopBtns() {
   //Muestra-oculta botones de "Jugar"
@@ -106,17 +96,16 @@ function showHidePlayStopBtns() {
     for (let btn of playBtns) {
       btn.classList.remove("d-none");
       btn.value = "Jugar";
-      btn.addEventListener("click", startStage);
+      btn.addEventListener("click", () => {
+        startStage(btn.id.substring(6));
+      });
     }
   } else {
-    //console.log("---ELSE---");
     for (let btn of playBtns) {
       if (!btn.classList.contains("player" + stage.playerName)) {
-        //        console.log("Invisible");
         btn.classList.add("d-none");
         btn.value = "-";
       } else {
-        //        console.log("Detener");
         btn.classList.remove("d-none");
         btn.value = "Detener";
         btn.addEventListener("click", stopStage);
@@ -128,43 +117,65 @@ function showHidePlayStopBtns() {
 function startStage(namePlayer) {
   //Comienza partida
   //Inicia Partida de un jugador
-  console.log("startStage");
-  // console.log(namePlayer.target.id);
-
   let player = ranking.players.find((player) => player.name === namePlayer);
-  console.log(player);
-  //console.log(player.name);
-  console.log("POST player");
   stage.attempts = 10;
-  //stage.playerName = player.name;
-  console.log(stage);
+  stage.playerName = player.name;
+  stage.points = 0;
   showHidePlayStopBtns();
-  //initBoard();
+  initBoard();
 }
 
 function initBoard() {
-  //Inicializa tablero
+  const board = document.querySelectorAll(".box");
+  for (let square of board) {
+    square.addEventListener("click", function handlerInitBoard() {
+      playerCatch(square.id);
+    });
+  }
+}
+
+function playerCatch(positionId) {
+  const square = document.getElementById(positionId);
+  let player = ranking.players.find(
+    (player) => player.name === stage.playerName
+  );
+  if (square.classList.contains("topo")) {
+    player.points += 3;
+    stage.points += 3;
+  } else if (square.classList.contains("miss")) {
+    player.points -= 1;
+    stage.points -= 1;
+    player.points < 0 && (player.points = 0); //No permite puntaje menor que cero.
+  }
+  stage.attempts--;
+  if (stage.attempts === 0) {
+    stopStage();
+  } else {
+    showMsj(`Intentos: ${stage.attempts}`);
+  }
+  showRankingDOM();
 }
 
 function stopStage() {
-  console.log("Detenido Juego");
-  // stage.attempts = 0;
-  // stage.playerName = "";
-  // saveRanking();
-  // showRankingDOM();
+  finishBoard();
+  showMsj(
+    `Gracias por jugar ${stage.playerName}, has obtenido ${stage.points} puntos en esta partida.`,
+    6000
+  );
+  stage.attempts = 0;
+  stage.playerName = "";
+  saveRanking();
+  showRankingDOM();
 }
 
-function test(msg){ //Función de pruebas
+function finishBoard() {
+  const board = document.querySelectorAll(".box");
+  for (let square of board) {
+    square.parentNode.replaceChild(square.cloneNode(1), square); //Remueve eventos suplantando objeto
+  }
+}
+
+function test(msg) {
+  //Función de pruebas
   console.log(msg);
 }
-
-
-
-
-
-
-
-
-
-
-

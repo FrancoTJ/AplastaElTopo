@@ -18,10 +18,11 @@ class Player {
   }
 }
 
-class Stage {
-  constructor(attempts, playerName) {
-    this.attempts = attempts;
-    this.playerName = playerName;
+class Stage { //Registra los datos de partida actual
+  constructor(attempts, playerName) { 
+    this.attempts = attempts; //Intentos restantes
+    this.playerName = playerName; //Jugador actual
+    this.points = 0; //Puntos totales de la partida
   }
 }
 
