@@ -1,4 +1,3 @@
-const ranking = new Ranking();
 let stage = new Stage(0, "");
 
 init();
@@ -12,10 +11,10 @@ function init() {
 
 function loadSave() {
   //Carga de LocalStorage si ya existen datos previos
-  let list = localStorage.getItem("ranking")
+  let localPlayers = localStorage.getItem("ranking")
     ? JSON.parse(localStorage.getItem("ranking"))
     : [];
-  ranking.players = list;
+  players = localPlayers;
 }
 
 function addEventNewPlayer() {
@@ -28,25 +27,31 @@ function addEventNewPlayer() {
 function addPlayer() {
   //Ingresa en sistema jugador a listado
   const inputPlayerName = document.getElementById("namePlayerText");
-  inputPlayerName.value = inputPlayerName.value.trim();
+  inputPlayerName.value = inputPlayerName.value.replace(/[\W]+/g,"").trim(); //Quita espacios y símbolos
   if (inputPlayerName.value.length === 0) {
-    showMsj("Favor ingrese un nombre.", 2000);
-    //} else if(ranking.players.some((player) => player.namePlayer === namePlayerText)) {
+    showMsj("Please insert name. ❌", 2000, "error");
+    //} else if(players.some((player) => player.namePlayer === namePlayerText)) {
   } else if (
-    ranking.players.some((player) => player.name === inputPlayerName.value)
+    players.some((player) => player.name === inputPlayerName.value)
   ) {
-    showMsj("Nombre ya ingresado.", 2000);
+    showMsj("Name already exist. ❌", 2000, "error");
   } else {
     const jugador = new Player(inputPlayerName.value);
     inputPlayerName.value = "";
-    ranking.agregarJugador(jugador);
+    players.push(jugador)
     saveRanking();
     showRankingDOM();
-    showMsj("Usuario ingresado.", 3000);
+    showMsj(`Player added as '${jugador.name}'. ✅`, 3000, "confirm");
   }
 }
 
-function showMsj(msj, timeMilliseconds) {
+function showMsj(msj, timeMilliseconds, type) {
+  let backgroundColor = {
+    message: "#90e0ef",
+    error: "#f28482",
+    confirm : "#81b29a"
+  };
+
   Toastify({
     text: msj,
     duration: timeMilliseconds,
@@ -54,7 +59,7 @@ function showMsj(msj, timeMilliseconds) {
     position: "right", // `left`, `center` or `right`
     stopOnFocus: true, // Prevents dismissing of toast on hover
     style: {
-      background: "linear-gradient(to right, #00b09b, #96c93d)",
+      background: backgroundColor[type] || "grey",
     },
     onClick: function () {}, // Callback after click
   }).showToast();
@@ -62,27 +67,27 @@ function showMsj(msj, timeMilliseconds) {
 
 function saveRanking() {
   //Graba Ranking de jugadores en LocalStorage
-  localStorage.setItem("ranking", JSON.stringify(ranking.players));
+  localStorage.setItem("ranking", JSON.stringify(players));
 }
 
 function showRankingDOM() {
   //Muestra en pantalla listado de jugadores
   const ULPlayers = document.getElementById("ULPlayers");
-  if (ranking.players.length === 0) {
+  if (players.length === 0) {
     ULPlayers.innerHTML = "";
     const liVacia = document.createElement("li");
     liVacia.className = "LIVacia";
     liVacia.innerText =
-      "No hay Jugadores creados, favor crear uno para comenzar.";
+      "No players created, please add one to begin.";
     ULPlayers.appendChild(liVacia);
   } else {
     ULPlayers.innerHTML = "";
-    ranking.players.forEach((player) => {
+    players.forEach((player) => {
       const liJugador = document.createElement("li");
       liJugador.className = "LIPlayer " + "LIPlayer" + player.ranking;
       liJugador.innerHTML =
         `${player.ranking}) ${player.name} - ${player.points}pts. ` +
-        `<input id='player${player.name}' type='button' value='Jugar' class='play player${player.name}'>`;
+        `<input id='player${player.name}' type='button' value='Play' class='play player${player.name}'>`;
       ULPlayers.appendChild(liJugador);
     });
     showHidePlayStopBtns();
@@ -117,7 +122,7 @@ function showHidePlayStopBtns() {
 function startStage(namePlayer) {
   //Comienza partida
   //Inicia Partida de un jugador
-  let player = ranking.players.find((player) => player.name === namePlayer);
+  let player = players.find((player) => player.name === namePlayer);
   stage.attempts = 10;
   stage.playerName = player.name;
   stage.points = 0;
@@ -136,7 +141,7 @@ function initBoard() {
 
 function playerCatch(positionId) {
   const square = document.getElementById(positionId);
-  let player = ranking.players.find(
+  let player = players.find(
     (player) => player.name === stage.playerName
   );
   if (square.classList.contains("topo")) {
@@ -151,7 +156,7 @@ function playerCatch(positionId) {
   if (stage.attempts === 0) {
     stopStage();
   } else {
-    showMsj(`Intentos: ${stage.attempts}`);
+    showMsj(`Intentos: ${stage.attempts}`, 500, "confirm");
   }
   showRankingDOM();
 }
@@ -160,7 +165,7 @@ function stopStage() {
   finishBoard();
   showMsj(
     `Gracias por jugar ${stage.playerName}, has obtenido ${stage.points} puntos en esta partida.`,
-    6000
+    6000, "confirm"
   );
   stage.attempts = 0;
   stage.playerName = "";

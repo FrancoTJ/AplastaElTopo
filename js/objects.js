@@ -1,18 +1,8 @@
-class Ranking {
-  constructor() {
-    this.players = [];
-  }
-  ordenarJugadores() {
-    console.log("Pendiente ordenamiento");
-  }
-  agregarJugador(jugador) {
-    this.players.push(jugador);
-  }
-}
+let players = [];
 
 class Player {
   constructor(name) {
-    this.ranking = ranking.players.length + 1;
+    this.ranking = players.length + 1;
     this.name = name;
     this.points = 0;
   }
