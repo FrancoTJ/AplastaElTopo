@@ -1,3 +1,12 @@
+// ---VARIABLES DE ENTORNO---
+const STAGETOTALSECONDS = 4; //Tiempo de duración de partida en segundos
+
+// ---VARIABLES DE ESTILO---
+const MSJMESSAGECOLOR = "#90e0ef";
+const MSJERRORCOLOR = "#f28482";
+const MSJCONFIRMCOLOR = "#81b29a";
+//
+
 let stage = new Stage(0, "");
 
 init();
@@ -27,18 +36,16 @@ function addEventNewPlayer() {
 function addPlayer() {
   //Ingresa en sistema jugador a listado
   const inputPlayerName = document.getElementById("namePlayerText");
-  inputPlayerName.value = inputPlayerName.value.replace(/[\W]+/g,"").trim(); //Quita espacios y símbolos
+  inputPlayerName.value = inputPlayerName.value.replace(/[\W]+/g, "").trim(); //Quita espacios y símbolos
   if (inputPlayerName.value.length === 0) {
     showMsj("Please insert name. ❌", 2000, "error");
     //} else if(players.some((player) => player.namePlayer === namePlayerText)) {
-  } else if (
-    players.some((player) => player.name === inputPlayerName.value)
-  ) {
+  } else if (players.some((player) => player.name === inputPlayerName.value)) {
     showMsj("Name already exist. ❌", 2000, "error");
   } else {
     const jugador = new Player(inputPlayerName.value);
     inputPlayerName.value = "";
-    players.push(jugador)
+    players.push(jugador);
     saveRanking();
     showRankingDOM();
     showMsj(`Player added as '${jugador.name}'. ✅`, 3000, "confirm");
@@ -46,13 +53,14 @@ function addPlayer() {
 }
 
 function showMsj(msj, timeMilliseconds, type) {
+  //Muestra mensajes emergentes
   let backgroundColor = {
-    message: "#90e0ef",
-    error: "#f28482",
-    confirm : "#81b29a"
+    message: MSJMESSAGECOLOR,
+    error: MSJERRORCOLOR,
+    confirm: MSJCONFIRMCOLOR,
   };
-
   Toastify({
+    // Librería utilizada para mostrar mensajes emergentes
     text: msj,
     duration: timeMilliseconds,
     gravity: "bottom", // `top` or `bottom`
@@ -77,8 +85,7 @@ function showRankingDOM() {
     ULPlayers.innerHTML = "";
     const liVacia = document.createElement("li");
     liVacia.className = "LIVacia";
-    liVacia.innerText =
-      "No players created, please add one to begin.";
+    liVacia.innerText = "No players created, please add one to begin.";
     ULPlayers.appendChild(liVacia);
   } else {
     ULPlayers.innerHTML = "";
@@ -121,29 +128,81 @@ function showHidePlayStopBtns() {
 
 function startStage(namePlayer) {
   //Comienza partida
-  //Inicia Partida de un jugador
   let player = players.find((player) => player.name === namePlayer);
   stage.attempts = 10;
   stage.playerName = player.name;
   stage.points = 0;
+  stage.time = STAGETOTALSECONDS;
   showHidePlayStopBtns();
   initBoard();
 }
 
 function initBoard() {
-  const board = document.querySelectorAll(".box");
-  for (let square of board) {
+  //Inicializa tablero
+  const board = document.querySelectorAll(".box"); //Elementos posibles contenedores de topo
+  board.forEach((square) => {
+    //--Refactorizado
     square.addEventListener("click", function handlerInitBoard() {
-      playerCatch(square.id);
+      playerAttempt(square.id);
     });
-  }
+  });
+
+  const scoreboardPlayer = document.getElementById("scoreboardPlayer");
+  scoreboardPlayer.innerText = stage.playerName;
+  const scoreboardScore = document.getElementById("scoreboardScore");
+  scoreboardScore.innerText = stage.points;
+  const scoreboardTime = document.getElementById("scoreboardTime");
+  scoreboardTime.innerText = stage.time;
+
+  const interval = setInterval(() => {
+    //Inicializa cuenta regresiva
+    stage.time--;
+    scoreboardTime.innerText = stage.time;
+    if (stage.time <= 0) {
+      clearInterval(interval);
+      stopStage();
+    }
+  }, 1000);
 }
 
-function playerCatch(positionId) {
-  const square = document.getElementById(positionId);
-  let player = players.find(
-    (player) => player.name === stage.playerName
+function stopStage() {
+  //Detiene partida
+  showResults();
+  finishBoard();
+  saveRanking();
+  showRankingDOM();
+}
+
+function showResults(){
+  showMsj(
+    `Gracias por jugar ${stage.playerName}, has obtenido ${stage.points} puntos en esta partida.`,
+    6000,
+    "confirm"
   );
+}
+
+function finishBoard() {
+  //Restablece tablero
+  const board = document.querySelectorAll(".box");
+  for (let square of board) {
+    square.parentNode.replaceChild(square.cloneNode(1), square); //Remueve eventos suplantando objeto
+  }
+  stage.attempts = 0;
+  stage.playerName = "";
+  stage.points = 0;
+  stage.time = 0;
+  const scoreboardPlayer = document.getElementById("scoreboardPlayer");
+  scoreboardPlayer.innerText = "";
+  const scoreboardScore = document.getElementById("scoreboardScore");
+  scoreboardScore.innerText = "";
+  const scoreboardTime = document.getElementById("scoreboardTime");
+  scoreboardTime.innerText = "";
+}
+
+function playerAttempt(positionId) {
+  //Intento de atrapar topo
+  const square = document.getElementById(positionId);
+  let player = players.find((player) => player.name === stage.playerName);
   if (square.classList.contains("topo")) {
     player.points += 3;
     stage.points += 3;
@@ -161,26 +220,7 @@ function playerCatch(positionId) {
   showRankingDOM();
 }
 
-function stopStage() {
-  finishBoard();
-  showMsj(
-    `Gracias por jugar ${stage.playerName}, has obtenido ${stage.points} puntos en esta partida.`,
-    6000, "confirm"
-  );
-  stage.attempts = 0;
-  stage.playerName = "";
-  saveRanking();
-  showRankingDOM();
-}
-
-function finishBoard() {
-  const board = document.querySelectorAll(".box");
-  for (let square of board) {
-    square.parentNode.replaceChild(square.cloneNode(1), square); //Remueve eventos suplantando objeto
-  }
-}
-
 function test(msg) {
-  //Función de pruebas
+  //Testing
   console.log(msg);
 }

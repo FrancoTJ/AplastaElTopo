@@ -13,6 +13,7 @@ class Stage { //Registra los datos de partida actual
     this.attempts = attempts; //Intentos restantes
     this.playerName = playerName; //Jugador actual
     this.points = 0; //Puntos totales de la partida
+    this.time = 0; //Segundos disponibles
   }
 }
 
