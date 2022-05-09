@@ -4,7 +4,7 @@ class Player {
   constructor(name) {
     this.ranking = players.length + 1;
     this.name = name;
-    this.points = 0;
+    this.bestScore = 0;
   }
 }
 

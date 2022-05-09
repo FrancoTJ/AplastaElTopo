@@ -80,6 +80,8 @@ function saveRanking() {
 
 function showRankingDOM() {
   //Muestra en pantalla listado de jugadores
+  //Ordenamiento de listado de jugadores
+  players.sort((player1, player2) => player2.bestScore-player1.bestScore);
   const ULPlayers = document.getElementById("ULPlayers");
   if (players.length === 0) {
     ULPlayers.innerHTML = "";
@@ -93,7 +95,7 @@ function showRankingDOM() {
       const liJugador = document.createElement("li");
       liJugador.className = "LIPlayer " + "LIPlayer" + player.ranking;
       liJugador.innerHTML =
-        `${player.ranking}) ${player.name} - ${player.points}pts. ` +
+        `${player.ranking}) ${player.name} - ${player.bestScore}pts. ` +
         `<input id='player${player.name}' type='button' value='Play' class='play player${player.name}'>`;
       ULPlayers.appendChild(liJugador);
     });
@@ -107,7 +109,8 @@ function showHidePlayStopBtns() {
   if (stage.playerName === "") {
     for (let btn of playBtns) {
       btn.classList.remove("d-none");
-      btn.value = "Jugar";
+      btn.classList.add("btn-primary");
+      btn.value = "Play";
       btn.addEventListener("click", () => {
         startStage(btn.id.substring(6));
       });
@@ -118,8 +121,9 @@ function showHidePlayStopBtns() {
         btn.classList.add("d-none");
         btn.value = "-";
       } else {
+        btn.classList.add("btn-danger");
+        btn.value = "Stop stage";
         btn.classList.remove("d-none");
-        btn.value = "Detener";
         btn.addEventListener("click", stopStage);
       }
     }
@@ -146,7 +150,8 @@ function initBoard() {
       playerAttempt(square.id);
     });
   });
-
+  const scoreboard = document.getElementById("scoreboard");
+  scoreboard.classList.remove("d-none");
   const scoreboardPlayer = document.getElementById("scoreboardPlayer");
   scoreboardPlayer.innerText = stage.playerName;
   const scoreboardScore = document.getElementById("scoreboardScore");
@@ -160,25 +165,17 @@ function initBoard() {
     scoreboardTime.innerText = stage.time;
     if (stage.time <= 0) {
       clearInterval(interval);
-      stopStage();
+      stage.playerName != "" && stopStage();
     }
   }, 1000);
 }
 
 function stopStage() {
   //Detiene partida
-  showResults();
+  console.log("Stopstage: ", stage);
   finishBoard();
-  saveRanking();
   showRankingDOM();
-}
-
-function showResults(){
-  showMsj(
-    `Gracias por jugar ${stage.playerName}, has obtenido ${stage.points} puntos en esta partida.`,
-    6000,
-    "confirm"
-  );
+  saveRanking();
 }
 
 function finishBoard() {
@@ -187,37 +184,74 @@ function finishBoard() {
   for (let square of board) {
     square.parentNode.replaceChild(square.cloneNode(1), square); //Remueve eventos suplantando objeto
   }
+  const scoreboard = document.getElementById("scoreboard");
+  scoreboard.classList.add("d-none");
+  evaluateStage();
   stage.attempts = 0;
   stage.playerName = "";
   stage.points = 0;
   stage.time = 0;
-  const scoreboardPlayer = document.getElementById("scoreboardPlayer");
-  scoreboardPlayer.innerText = "";
-  const scoreboardScore = document.getElementById("scoreboardScore");
-  scoreboardScore.innerText = "";
-  const scoreboardTime = document.getElementById("scoreboardTime");
-  scoreboardTime.innerText = "";
+  showRankingDOM();
 }
+
+function evaluateStage(){
+  let player = players.find((player) => player.name === stage.playerName);
+  if (stage.points === player.bestScore) {
+    //Mismo puntaje que anteriormente
+    Swal.fire({
+      title: 'Great attempt',
+      text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
+      Maybe next time... 👍`,
+      icon: 'info',
+      confirmButtonText: 'Ok'
+    })
+  } else if (stage.points <= player.bestScore) {
+    //Peor puntaje que ocasiones anteriores
+    Swal.fire({
+      title: 'Good job!',
+      text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
+      Try your best next time... 😉`,
+      icon: 'warning',
+      confirmButtonText: 'Ok'
+    })
+  } else if (stage.points >= player.bestScore) {
+    //Mejora puntaje de ocasiones anteriores
+    Swal.fire({
+      title: 'EXCELLENT!!',
+      text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
+      You do it like a pro... 💪`,
+      icon: 'success',
+      confirmButtonText: 'Ok'
+    })
+    let player = players.find((player) => player.name === stage.playerName);
+    player.bestScore = stage.points;
+  }
+};
 
 function playerAttempt(positionId) {
   //Intento de atrapar topo
   const square = document.getElementById(positionId);
-  let player = players.find((player) => player.name === stage.playerName);
+  //let player = players.find((player) => player.name === stage.playerName);
   if (square.classList.contains("topo")) {
-    player.points += 3;
+    //player.bestScore += 3;
     stage.points += 3;
   } else if (square.classList.contains("miss")) {
-    player.points -= 1;
+    //player.bestScore -= 1;
+    //player.bestScore < 0 && (player.bestScore = 0); //No permite puntaje menor que cero.
     stage.points -= 1;
-    player.points < 0 && (player.points = 0); //No permite puntaje menor que cero.
+    stage.points < 0 && (stage.points = 0); //No permite puntaje menor que cero.
   }
+
+  const scoreboradScore = document.getElementById("scoreboardScore");
+  scoreboardScore.innerHTML = stage.points;
+
   stage.attempts--;
   if (stage.attempts === 0) {
     stopStage();
   } else {
     showMsj(`Intentos: ${stage.attempts}`, 500, "confirm");
   }
-  showRankingDOM();
+  console.log("Attempt: ", stage);
 }
 
 function test(msg) {
