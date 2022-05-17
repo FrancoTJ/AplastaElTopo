@@ -1,13 +1,25 @@
 // ---VARIABLES DE ENTORNO---
-const STAGETOTALSECONDS = 4; //Tiempo de duración de partida en segundos
+const STAGETOTALSECONDS = 15; //Tiempo de duración de partida en segundos
+const MOLESAPPEARMILISECONDS = 1400; //Tiempo de aparición estándar de topos
+const MOLESAPPEARMAXVARIATIONMILISECONDS = 1000; //Tiempo de aparición estándar de topos
+const MOLEDISAPPEARMILISECONDS = 700; //Tiempo de aparición estándar de topos
+const MOLEATTEMPTDISAPPEARMILISECONDS = 500; //Tiempo de aparición estándar de topos
 
 // ---VARIABLES DE ESTILO---
-const MSJMESSAGECOLOR = "#90e0ef";
-const MSJERRORCOLOR = "#f28482";
-const MSJCONFIRMCOLOR = "#81b29a";
-//
+const MSJMESSAGECOLOR = "#90e0ef"; //Colores del Tostify, Mensaje
+const MSJERRORCOLOR = "#f28482"; //Colores del Tostify, Error
+const MSJCONFIRMCOLOR = "#81b29a"; //Colores del Tostify, Confirmación
 
-let stage = new Stage(0, "");
+const IMGMOLE = "./img/mole.jpg"; //Colores del Tostify, Mensaje
+const IMGCLEAR = "./img/clear.jpg"; //Colores del Tostify, Error
+const IMGSMASHED = "./img/smashed.jpg"; //Colores del Tostify, Confirmación
+const IMGMISS = "./img/miss.jpg"; //Colores del Tostify, Confirmación
+
+// ---VARIABLES GLOBALES---
+let intervalTimer; //Intervalo de segundos del juego
+let timeoutMole; //Timeout de aparición de topos
+let stage = new Stage(0, ""); //Manejador de partida
+//----------------------
 
 init();
 
@@ -81,7 +93,7 @@ function saveRanking() {
 function showRankingDOM() {
   //Muestra en pantalla listado de jugadores
   //Ordenamiento de listado de jugadores
-  players.sort((player1, player2) => player2.bestScore-player1.bestScore);
+  players.sort((player1, player2) => player2.bestScore - player1.bestScore);
   const ULPlayers = document.getElementById("ULPlayers");
   if (players.length === 0) {
     ULPlayers.innerHTML = "";
@@ -111,7 +123,9 @@ function showHidePlayStopBtns() {
       btn.classList.remove("d-none");
       btn.classList.add("btn-primary");
       btn.value = "Play";
-      btn.addEventListener("click", () => {
+      newBtn = btn.cloneNode(1);
+      btn.parentNode.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", () => {
         startStage(btn.id.substring(6));
       });
     }
@@ -124,7 +138,9 @@ function showHidePlayStopBtns() {
         btn.classList.add("btn-danger");
         btn.value = "Stop stage";
         btn.classList.remove("d-none");
-        btn.addEventListener("click", stopStage);
+        newBtn = btn.cloneNode(1);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", stopStage);
       }
     }
   }
@@ -133,7 +149,6 @@ function showHidePlayStopBtns() {
 function startStage(namePlayer) {
   //Comienza partida
   let player = players.find((player) => player.name === namePlayer);
-  stage.attempts = 10;
   stage.playerName = player.name;
   stage.points = 0;
   stage.time = STAGETOTALSECONDS;
@@ -159,20 +174,50 @@ function initBoard() {
   const scoreboardTime = document.getElementById("scoreboardTime");
   scoreboardTime.innerText = stage.time;
 
-  const interval = setInterval(() => {
+  intervalTimer = setInterval(() => {
     //Inicializa cuenta regresiva
     stage.time--;
     scoreboardTime.innerText = stage.time;
     if (stage.time <= 0) {
-      clearInterval(interval);
+      clearInterval(intervalTimer);
       stage.playerName != "" && stopStage();
     }
   }, 1000);
+  setMoleControl();
+}
+
+function setMoleControl() {
+  let variationMiliseconds =
+    Math.floor(Math.random() * MOLESAPPEARMAXVARIATIONMILISECONDS) + 1;
+  let moreOrLessTime = Math.floor(Math.random() * 2);
+  let totalTimeAppear =
+    MOLESAPPEARMILISECONDS +
+    (moreOrLessTime ? variationMiliseconds : -variationMiliseconds);
+
+  timeoutMole = setTimeout(() => { //Muestra topo al fin de timeout
+    showMole();
+    setMoleControl();
+  }, totalTimeAppear);
+  stage.timeoutsMoles.push(timeoutMole);
+}
+
+function showMole() {
+  let posX = Math.floor(Math.random() * 3) + 1;
+  let posY = Math.floor(Math.random() * 3) + 1;
+  let querySelectors = "#i" + posX + "-" + posY + " img";
+  let boxImage = document.querySelector(querySelectors);
+  boxImage.src = IMGMOLE;
+  boxImage.parentNode.classList.add('mole');
+  boxImage.parentNode.classList.remove('miss');
+  timeoutMole = setTimeout(() => { //Quita topo al fin de timeout
+    boxImage.src = IMGCLEAR;
+    boxImage.parentNode.classList.add('miss');
+    boxImage.parentNode.classList.remove('mole');
+    }, MOLEDISAPPEARMILISECONDS);
 }
 
 function stopStage() {
   //Detiene partida
-  console.log("Stopstage: ", stage);
   finishBoard();
   showRankingDOM();
   saveRanking();
@@ -180,6 +225,8 @@ function stopStage() {
 
 function finishBoard() {
   //Restablece tablero
+  clearInterval(intervalTimer);
+  stage.timeoutsMoles.forEach(to => clearTimeout(to));
   const board = document.querySelectorAll(".box");
   for (let square of board) {
     square.parentNode.replaceChild(square.cloneNode(1), square); //Remueve eventos suplantando objeto
@@ -187,71 +234,84 @@ function finishBoard() {
   const scoreboard = document.getElementById("scoreboard");
   scoreboard.classList.add("d-none");
   evaluateStage();
-  stage.attempts = 0;
   stage.playerName = "";
   stage.points = 0;
   stage.time = 0;
+  clearBoard();
   showRankingDOM();
 }
 
-function evaluateStage(){
+function clearBoard(){
+  //Libera tablero de imágenes y clases anteriores
+  let boxes = document.querySelectorAll(".box");
+  boxes.forEach(box => {
+    box.childNodes[0].src = IMGCLEAR;
+    box.classList.add('miss');
+    box.classList.remove('mole');
+  })
+}
+
+function evaluateStage() {
   let player = players.find((player) => player.name === stage.playerName);
   if (stage.points === player.bestScore) {
     //Mismo puntaje que anteriormente
     Swal.fire({
-      title: 'Great attempt',
+      title: "Great attempt",
       text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
       Maybe next time... 👍`,
-      icon: 'info',
-      confirmButtonText: 'Ok'
-    })
+      icon: "info",
+      confirmButtonText: "Ok",
+    });
   } else if (stage.points <= player.bestScore) {
     //Peor puntaje que ocasiones anteriores
     Swal.fire({
-      title: 'Good job!',
+      title: "Good job!",
       text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
       Try your best next time... 😉`,
-      icon: 'warning',
-      confirmButtonText: 'Ok'
-    })
+      icon: "warning",
+      confirmButtonText: "Ok",
+    });
   } else if (stage.points >= player.bestScore) {
     //Mejora puntaje de ocasiones anteriores
     Swal.fire({
-      title: 'EXCELLENT!!',
+      title: "EXCELLENT!!",
       text: `Thanks for playing ${stage.playerName}, you got ${stage.points} points in this attempt.
       You do it like a pro... 💪`,
-      icon: 'success',
-      confirmButtonText: 'Ok'
-    })
+      icon: "success",
+      confirmButtonText: "Ok",
+    });
     let player = players.find((player) => player.name === stage.playerName);
     player.bestScore = stage.points;
   }
-};
+}
 
-function playerAttempt(positionId) {
+function playerAttempt(cssId) {
   //Intento de atrapar topo
-  const square = document.getElementById(positionId);
-  //let player = players.find((player) => player.name === stage.playerName);
-  if (square.classList.contains("topo")) {
-    //player.bestScore += 3;
+  const square = document.getElementById(cssId);
+  if (square.classList.contains("mole")) { //Intento acertado
     stage.points += 3;
-  } else if (square.classList.contains("miss")) {
-    //player.bestScore -= 1;
-    //player.bestScore < 0 && (player.bestScore = 0); //No permite puntaje menor que cero.
+    let querySelectors = "#" + cssId + " img";
+    let boxImage = document.querySelector(querySelectors);
+    boxImage.src = IMGSMASHED;
+    boxImage.parentNode.classList.add('miss');
+    boxImage.parentNode.classList.remove('mole');
+    timeoutMole = setTimeout(() => {
+      boxImage.src = IMGCLEAR;
+      }, MOLEATTEMPTDISAPPEARMILISECONDS);
+  } else if (square.classList.contains("miss")) { //Intento errado
     stage.points -= 1;
     stage.points < 0 && (stage.points = 0); //No permite puntaje menor que cero.
+    let querySelectors = "#" + cssId + " img";
+    let boxImage = document.querySelector(querySelectors);
+    boxImage.src = IMGMISS;
+    boxImage.parentNode.classList.add('miss');
+    boxImage.parentNode.classList.remove('mole');
+    timeoutMole = setTimeout(() => {
+      boxImage.src = IMGCLEAR;
+      }, MOLEATTEMPTDISAPPEARMILISECONDS);
   }
-
   const scoreboradScore = document.getElementById("scoreboardScore");
   scoreboardScore.innerHTML = stage.points;
-
-  stage.attempts--;
-  if (stage.attempts === 0) {
-    stopStage();
-  } else {
-    showMsj(`Intentos: ${stage.attempts}`, 500, "confirm");
-  }
-  console.log("Attempt: ", stage);
 }
 
 function test(msg) {
