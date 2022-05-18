@@ -1,8 +1,8 @@
 // ---VARIABLES DE ENTORNO---
 const STAGETOTALSECONDS = 15; //Tiempo de duración de partida en segundos
-const MOLESAPPEARMILISECONDS = 1400; //Tiempo de aparición estándar de topos
-const MOLESAPPEARMAXVARIATIONMILISECONDS = 1000; //Tiempo de aparición estándar de topos
-const MOLEDISAPPEARMILISECONDS = 700; //Tiempo de aparición estándar de topos
+const MOLESAPPEARMILISECONDS = 900; //Tiempo de aparición estándar de topos
+const MOLESAPPEARMAXVARIATIONMILISECONDS = 1100; //Tiempo de aparición estándar de topos
+const MOLEDISAPPEARMILISECONDS = 650; //Tiempo de aparición estándar de topos
 const MOLEATTEMPTDISAPPEARMILISECONDS = 500; //Tiempo de aparición estándar de topos
 
 // ---VARIABLES DE ESTILO---
@@ -107,7 +107,7 @@ function showRankingDOM() {
       const liJugador = document.createElement("li");
       liJugador.className = "LIPlayer " + "LIPlayer" + player.ranking;
       liJugador.innerHTML =
-        `${player.ranking}) ${player.name} - ${player.bestScore}pts. ` +
+        `${players.indexOf(player)+1}º) ${player.name} - ${player.bestScore}pts. ` +
         `<input id='player${player.name}' type='button' value='Play' class='play player${player.name}'>`;
       ULPlayers.appendChild(liJugador);
     });
@@ -161,7 +161,7 @@ function initBoard() {
   const board = document.querySelectorAll(".box"); //Elementos posibles contenedores de topo
   board.forEach((square) => {
     //--Refactorizado
-    square.addEventListener("click", function handlerInitBoard() {
+    square.addEventListener("mousedown", function handlerInitBoard() {
       playerAttempt(square.id);
     });
   });
@@ -299,7 +299,7 @@ function playerAttempt(cssId) {
       boxImage.src = IMGCLEAR;
       }, MOLEATTEMPTDISAPPEARMILISECONDS);
   } else if (square.classList.contains("miss")) { //Intento errado
-    stage.points -= 1;
+    //stage.points -= 1; //Se elimina la posibilidad de perder puntos
     stage.points < 0 && (stage.points = 0); //No permite puntaje menor que cero.
     let querySelectors = "#" + cssId + " img";
     let boxImage = document.querySelector(querySelectors);
